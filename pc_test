@@ -1,0 +1,68 @@
+import platform,psutil,time,subprocess,speedtest
+
+u = platform.uname()
+
+def windows():
+    return
+
+def linux():
+    
+    out = f"{time.asctime()}_{u.node}_logs.txt"
+    host = '1.1.1.1'
+   
+    with open(out, 'a') as f:
+        while True:
+            #Not necessary but so that terminal is not boring
+            print (f"{time.asctime()}----> Its doing Something")
+
+            #runnin system utilization
+            os_ent = f"OS:{u.system} | {u.release} | {u.node}"
+            ram_ent = f"RAM:{int(psutil.virtual_memory().total/1000000)} | FREE:{int(psutil.virtual_memory().available/1000000)} | USED: {int(psutil.virtual_memory().used/1000000)} | PERCENT:{(psutil.virtual_memory().percent)}"
+            cpu_ent = f"CPU:{psutil.cpu_count()} PERCENT:{psutil.cpu_percent()}"
+
+            #This will ping shit
+            p_run = subprocess.run(['ping',host,'-c','5'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            p_out = p_run.stdout.decode('utf-8')
+            p_err = p_run.stderr.decode('utf-8')
+
+            if p_run.returncode==0:
+                ping_res = f"Ping Successful--{time.asctime()}\n{p_out}"
+            else:
+                ping_res = f"Oh ow! Ping not successful, check your internet \n"
+        
+            #This will  trace shit
+            t_run = subprocess.run(['traceroute',host,], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            t_out = t_run.stdout.decode('utf-8')
+            t_err = t_run.stderr.decode('utf-8')
+
+            if t_run.returncode==0:
+                tr_res = f"Trace Successful--{time.asctime()}\n{t_out}"
+            else:
+                tr_res = f"Oh ow! Trace not successful, check your internet \n"
+            #This line will do speedtet
+            if p_run.returncode == 0:
+                st = speedtest.Speedtest()
+                st.get_best_server()
+                d_speed = st.download() / 1_000_000  # Convert from bits/s to Mbits/s
+                u_speed = st.upload() / 1_000_000  # Convert from bits/s to Mbits/s
+                sp_res_up = f"Speedtest Successful--{time.asctime()}\n{u_speed}"
+                sp_res_d = f"Speedtest Successful--{time.asctime()}\n{d_speed}"
+            else:
+                sp_res_up=(f'Something Wrong \n')
+                sp_res_d=(f'Something Wrong \n')
+
+            #Output all test results
+            res_ent = f"{os_ent}\n{ram_ent}\n{cpu_ent}\n{ping_res}\n{tr_res}\n{sp_res_d}\n{sp_res_up}\n{'*'*100}\n"
+            #In every 5 secnds
+            time.sleep(5)
+        
+            f.write(res_ent)
+            f.flush()
+
+if __name__ == "__main__":
+    if u.system=='Linux':
+        linux()
+    elif u.system=='Windows':
+        windows()
+    else:
+        print('error')
